@@ -1,0 +1,8 @@
+FROM python:3.11-slim
+LABEL authors="olha"
+
+WORKDIR /app
+COPY app/requirements.txt .
+RUN pip install -r requirements.txt
+COPY app/app.py .
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]

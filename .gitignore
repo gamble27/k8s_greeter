@@ -1,0 +1,13 @@
+# OS & IDE
+.idea/*
+*.DS_Store
+
+# Python
+**/__pycache__/*
+*.env
+*.
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfvars
