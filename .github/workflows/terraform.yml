@@ -22,6 +22,7 @@ jobs:
           cd terraform
           terraform init
           terraform fmt -check
+          terraform plan
           terraform plan -out=tfplan -no-color
       - name: "Archive Plan"
         uses: actions/upload-artifact@v4
@@ -30,7 +31,7 @@ jobs:
           path: terraform/tfplan
 
   apply_stage:
-    name: "Stage 2: Apply via manual approval"
+    name: "Stage 2: Apply"
     needs: plan_stage
     runs-on: ubuntu-latest
     environment: production
