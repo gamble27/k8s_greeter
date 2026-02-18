@@ -7,7 +7,6 @@ on:
 jobs:
   plan_stage:
     name: "Stage 1: Plan"
-    environment: production
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
