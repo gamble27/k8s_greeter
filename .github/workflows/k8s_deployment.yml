@@ -1,0 +1,50 @@
+name: "K8S deployment"
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+#      - "v[0-9].[0-9].[0-9]"
+      - "v*"
+
+jobs:
+  build_container:
+    name: "Stage 1: build container"
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
+      - uses: docker/setup-buildx-action@v3
+      - name: "build"
+        run: |
+          gcloud auth configure-docker ${{ secrets.GCP_PROJECT_REGION }}-docker.pkg.dev
+          REGISTRY_PATH="${{ secrets.GCP_PROJECT_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ vars.GCP_DOCKER_REGISTRY }}/python-greeter"
+          docker buildx build -f docker/Dockerfile \
+            --platform linux/amd64,linux/arm64 \
+            --tag $REGISTRY_PATH:${{ github.ref_name }} \
+            --push .
+
+  deploy_k8s:
+    name: "Stage 2: deploy to k8s cluster"
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
+      - name: "get GKE credentials"
+        run: |
+          gcloud container clusters get-credentials ${{ vars.GCP_K8S_CLUSTER }} \
+            --region ${{ secrets.GCP_PROJECT_REGION }} \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+      - name: "dry run"
+        run: |
+          REGISTRY_PATH="${{ secrets.GCP_PROJECT_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ vars.GCP_DOCKER_REGISTRY }}/python-greeter"
+          cd k8s
+          kustomize edit set image gcr.io/placeholder/python-greeter=$REGISTRY_PATH:${{ github.ref_name }}
+          kubectl apply -k .
