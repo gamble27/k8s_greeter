@@ -37,9 +37,13 @@ jobs:
       - uses: google-github-actions/auth@v2
         with:
           credentials_json: "${{ secrets.GCP_SA_KEY }}"
-      - name: "install GKE auth plugin"
-        run: |
-          sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
+#      - name: "install GKE auth plugin"
+#        run: |
+#          sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
+      - name: "Set up Cloud SDK"
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: 'gke-gcloud-auth-plugin'
       - name: "get GKE credentials"
         run: |
           gcloud container clusters get-credentials ${{ vars.GCP_K8S_CLUSTER }} \
