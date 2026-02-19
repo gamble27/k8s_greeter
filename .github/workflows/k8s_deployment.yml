@@ -37,12 +37,15 @@ jobs:
       - uses: google-github-actions/auth@v2
         with:
           credentials_json: "${{ secrets.GCP_SA_KEY }}"
+      - name: "install GKE auth plugin"
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
       - name: "get GKE credentials"
         run: |
           gcloud container clusters get-credentials ${{ vars.GCP_K8S_CLUSTER }} \
             --region ${{ secrets.GCP_PROJECT_REGION }} \
             --project ${{ secrets.GCP_PROJECT_ID }}
-      - name: "dry run"
+      - name: "run"
         run: |
           REGISTRY_PATH="${{ secrets.GCP_PROJECT_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ vars.GCP_DOCKER_REGISTRY }}/python-greeter"
           cd k8s
